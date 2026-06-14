@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LC Barcode - DC Sidoarjo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #111; }
+  
+  .header { background: #185FA5; color: white; padding: 14px 16px; }
+  .header h1 { font-size: 17px; font-weight: 600; }
+  .header p { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+  .search-bar { padding: 12px 16px; background: white; border-bottom: 1px solid #e5e5e5; }
+  .search-bar input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; }
+  .search-bar input:focus { border-color: #185FA5; }
+
+  .lc-grid { padding: 12px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .lc-btn { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; font-size: 13px; font-family: monospace; font-weight: 600; color: #333; -webkit-tap-highlight-color: transparent; }
+  .lc-btn:active { background: #e6f1fb; }
+  .lc-btn.active { background: #185FA5; color: white; border-color: #185FA5; }
+
+  .barcode-section { padding: 16px; background: white; margin: 0 16px 16px; border-radius: 12px; border: 1px solid #e5e5e5; text-align: center; display: none; }
+  .barcode-section.show { display: block; }
+  .bc-label { font-size: 12px; color: #888; margin-bottom: 8px; }
+  .bc-title { font-size: 14px; font-weight: 700; letter-spacing: 1px; color: #185FA5; margin-bottom: 4px; }
+  canvas { width: 100% !important; max-width: 340px; height: 90px !important; display: block; margin: 0 auto; }
+  .lc-num { font-family: monospace; font-size: 22px; font-weight: 700; letter-spacing: 3px; margin-top: 8px; color: #111; }
+  .tip { font-size: 11px; color: #aaa; margin-top: 6px; }
+
+  .divider { height: 1px; background: #eee; margin: 0 16px 12px; }
+  .section-title { font-size: 11px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 16px 4px; }
+  .empty-msg { text-align: center; color: #aaa; font-size: 14px; padding: 24px; grid-column: 1/-1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>LC Barcode Display</h1>
+  <p>DC Sidoarjo — Sertim Picking</p>
+</div>
+
+<div class="search-bar">
+  <input type="search" id="search" placeholder="Cari nomor LC..." oninput="filterLC()" autocomplete="off" />
+</div>
+
+<div id="barcode-section" class="barcode-section">
+  <div class="bc-title">DC SIDOARJO</div>
+  <div class="bc-label">Arahkan RF Scanner ke barcode di bawah ini</div>
+  <canvas id="bc-canvas"></canvas>
+  <div class="lc-num" id="lc-num-display"></div>
+  <div class="tip">Scan dari layar — tidak perlu print</div>
+</div>
+
+<div class="section-title">Pilih LC</div>
+<div class="lc-grid" id="lc-grid"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script>
+const lcList = [
+  "260615L058","260615L059","260615L060","260615L061",
+  "260615L063","260615L064","260615L065","260615L066",
+  "260615T025","260615T026"
+];
+
+let selected = null;
+
+function filterLC() {
+  const q = document.getElementById('search').value.toUpperCase().trim();
+  const filtered = q ? lcList.filter(lc => lc.includes(q)) : lcList;
+  renderGrid(filtered);
+}
+
+function renderGrid(list) {
+  const grid = document.getElementById('lc-grid');
+  if (list.length === 0) {
+    grid.innerHTML = '<div class="empty-msg">LC tidak ditemukan</div>';
+    return;
+  }
+  grid.innerHTML = list.map(lc =>
+    `<div class="lc-btn ${selected===lc?'active':''}" onclick="selectLC('${lc}')">${lc}</div>`
+  ).join('');
+}
+
+function selectLC(lc) {
+  selected = lc;
+  renderGrid(document.getElementById('search').value.toUpperCase().trim()
+    ? lcList.filter(l => l.includes(document.getElementById('search').value.toUpperCase()))
+    : lcList);
+
+  document.getElementById('lc-num-display').textContent = lc;
+  document.getElementById('barcode-section').classList.add('show');
+
+  JsBarcode('#bc-canvas', lc, {
+    format: 'CODE128',
+    width: 2.8,
+    height: 90,
+    displayValue: false,
+    margin: 10,
+    background: '#ffffff',
+    lineColor: '#000000'
+  });
+
+  document.getElementById('barcode-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+renderGrid(lcList);
+</script>
+</body>
+</html>
